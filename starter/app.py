@@ -6,7 +6,8 @@ app = Flask(__name__)
 # Keep a simple in-memory store for current puzzle and solution
 CURRENT = {
     'puzzle': None,
-    'solution': None
+    'solution': None,
+    'difficulty': None,
 }
 
 @app.route('/')
@@ -15,23 +16,55 @@ def index():
 
 @app.route('/new')
 def new_game():
-    clues = int(request.args.get('clues', 35))
+    difficulty = request.args.get('difficulty')
+    if difficulty:
+        difficulty = difficulty.lower()
+        if difficulty not in sudoku_logic.DIFFICULTY_CLUES:
+            return jsonify({'error': 'Invalid difficulty'}), 400
+        clues = sudoku_logic.DIFFICULTY_CLUES[difficulty]
+    else:
+        try:
+            clues = int(request.args.get('clues', 35))
+        except (TypeError, ValueError):
+            return jsonify({'error': 'Invalid clue count'}), 400
     puzzle, solution = sudoku_logic.generate_puzzle(clues)
     CURRENT['puzzle'] = puzzle
     CURRENT['solution'] = solution
+    CURRENT['difficulty'] = difficulty or 'custom'
     return jsonify({'puzzle': puzzle})
+
+@app.route('/hint', methods=['POST'])
+def get_hint():
+    puzzle = CURRENT.get('puzzle')
+    solution = CURRENT.get('solution')
+    if puzzle is None or solution is None:
+        return jsonify({'error': 'No game in progress'}), 400
+
+    for row in range(sudoku_logic.SIZE):
+        for col in range(sudoku_logic.SIZE):
+            if puzzle[row][col] == sudoku_logic.EMPTY:
+                puzzle[row][col] = solution[row][col]
+                return jsonify({'row': row, 'col': col, 'value': solution[row][col]})
+
+    return jsonify({'error': 'No empty cells left'}), 400
 
 @app.route('/check', methods=['POST'])
 def check_solution():
-    data = request.json
+    data = request.get_json(silent=True) or {}
     board = data.get('board')
     solution = CURRENT.get('solution')
     if solution is None:
         return jsonify({'error': 'No game in progress'}), 400
+    if not isinstance(board, list) or len(board) != sudoku_logic.SIZE or any(
+        not isinstance(row, list) or len(row) != sudoku_logic.SIZE for row in board
+    ):
+        return jsonify({'error': 'Invalid board'}), 400
+
     incorrect = []
     for i in range(sudoku_logic.SIZE):
         for j in range(sudoku_logic.SIZE):
-            if board[i][j] != solution[i][j]:
+            value = board[i][j] or sudoku_logic.EMPTY
+            if value != solution[i][j]:
                 incorrect.append([i, j])
     return jsonify({'incorrect': incorrect})
 

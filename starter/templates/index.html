@@ -2,17 +2,66 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Sudoku Game</title>
+  <title>Sudoku Game | Sudoku Challenge</title>
   <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-  <h1>Sudoku Game</h1>
-  <div id="sudoku-board"></div>
-  <div class="controls">
-    <button id="new-game">New Game</button>
-    <button id="check-solution">Check Solution</button>
-    <span id="message"></span>
-  </div>
+    <header class="topbar">
+      <h1>Sudoku Challenge</h1>
+      <button id="theme-toggle" class="secondary-button" type="button">Dark mode</button>
+    </header>
+    <main>
+      <section class="game-panel" aria-label="Sudoku game">
+        <div class="stats" aria-live="polite">
+          <div><span class="stat-label">Time</span><strong id="timer">00:00</strong></div>
+          <div><span class="stat-label">Hints</span><strong id="hint-count">0</strong></div>
+        </div>
+        <div id="sudoku-board" aria-label="Sudoku board"></div>
+        <div class="controls">
+          <label for="difficulty">Difficulty</label>
+          <select id="difficulty">
+            <option value="easy">Easy</option>
+            <option value="medium" selected>Medium</option>
+            <option value="hard">Hard</option>
+          </select>
+          <button id="new-game" type="button">New Game</button>
+          <button id="hint" type="button">Use Hint</button>
+          <button id="check-solution" type="button">Check Solution</button>
+          <span id="message" role="status"></span>
+        </div>
+      </section>
+
+      <section class="leaderboard-panel" aria-labelledby="leaderboard-title">
+        <div class="leaderboard-heading">
+          <div>
+            <p class="eyebrow">Local scores</p>
+            <h2 id="leaderboard-title">Top 10 leaderboard</h2>
+          </div>
+          <label for="leaderboard-difficulty" class="sr-only">Leaderboard difficulty</label>
+          <select id="leaderboard-difficulty">
+            <option value="all">All difficulties</option>
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Rank</th><th>Player Name</th><th>Time</th><th>Difficulty</th><th>Hints Used</th></tr></thead>
+            <tbody id="leaderboard-body"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+    <dialog id="name-dialog">
+      <form id="score-form" method="dialog">
+        <h2>New personal best</h2>
+        <p id="score-summary"></p>
+        <label for="player-name">Your name</label>
+        <input id="player-name" name="player-name" maxlength="24" required autocomplete="name">
+        <div class="dialog-actions"><button value="cancel" class="secondary-button" type="submit">Skip</button><button value="save" type="submit">Save score</button></div>
+      </form>
+    </dialog>
   <script src="/static/main.js"></script>
 </body>
 </html>
